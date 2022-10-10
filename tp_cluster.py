@@ -225,27 +225,40 @@ print( " nb clusters = " ,kres , " , nb feuilles = " , leaves , " runtime = " , 
  ================ Optimization type de combination de clusters =============
 """
 
-tps1 = time.time()
-
 # On prend un nombre fixe k de clusters
 
 # set the number of clusters
 k = 20
-tps1 = time.time()
 
+tps1 = time.time()
 model_single = cluster.AgglomerativeClustering( linkage = 'single' , n_clusters = k )
 model_single = model_single.fit( datanp )
+tps2_single = time.time()
 
+tps_single = round (( tps2_single - tps1 ) * 1000 , 2 )
+
+tps1 = time.time()
 model_average = cluster.AgglomerativeClustering( linkage = 'average' , n_clusters = k )
 model_average = model_average.fit( datanp )
+tps_average = time.time()
 
+tps_average = round (( tps_average - tps1 ) * 1000 , 2 )
+
+tps1 = time.time()
 model_ward = cluster.AgglomerativeClustering( linkage = 'ward' , n_clusters = k )
 model_ward = model_ward.fit( datanp )
+tps_ward = time.time()
 
+tps_ward = round (( tps_ward - tps1 ) * 1000 , 2 )
+
+tps1 = time.time()
 model_complete = cluster.AgglomerativeClustering( linkage = 'complete' , n_clusters = k )
 model_complete = model_complete.fit( datanp )
+tps_complete = time.time()
 
-tps2 = time.time()
+
+tps_complete = round (( tps_complete- tps1 ) * 1000 , 2 )
+
 labels_single = model_single.labels_
 labels_average = model_average.labels_
 labels_ward = model_ward.labels_
@@ -276,8 +289,10 @@ plt.scatter( f0 , f1 , c = labels_complete , s = 8 )
 plt.title( " Resultat du clustering avec linkage complete " )
 plt.show()
 
-
-
+print(" Temps de calcul (single) : ", tps_single," ms")
+print(" Temps de calcul (average) : ", tps_average," ms")
+print(" Temps de calcul (ward) : ", tps_ward," ms")
+print(" Temps de calcul (complete) : ", tps_complete," ms")
 
 
 
