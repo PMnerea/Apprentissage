@@ -85,16 +85,17 @@ for i in range(2, 30) :
     met = davies_bouldin_score(datanp, fp.labels)
     vectMet.append(met)
 
-plt.scatter(list(range(2,30)), vectMet)
-plt.title("Metrics de Davies-Bouldin" )
-plt.show()
-    
-
 # +2 car les indices commencent à 0 et nos inices commencent à 2
 k= int(np.argmin(vectMet)+2)
 fp= kmedoids.fasterpam(distmatrix,k)
     
 tps2= time.time()
+
+
+plt.scatter(list(range(2,30)), vectMet)
+plt.title("Metrics de Davies-Bouldin" )
+plt.show()
+
 iter_kmed = fp.n_iter
 labels_kmed = fp.labels
 print( " Loss with FasterPAM : " , fp.loss)
