@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 import kmedoids
-import scipy . cluster . hierarchy as shc
+import scipy.cluster.hierarchy as shc
 
 from sklearn import cluster
 from sklearn.cluster import DBSCAN
@@ -20,6 +20,8 @@ from sklearn.metrics.pairwise import manhattan_distances
 from sklearn.metrics.cluster import rand_score
 from sklearn.metrics import mutual_info_score
 from sklearn.metrics import silhouette_score
+from sklearn.neighbors import NearestNeighbors
+import hdbscan
 
 """
  =================== Jeux de données =================
@@ -331,6 +333,76 @@ print(" Temps de calcul (complete) : ", tps_complete," ms")
 """
  ====================== DBSCAN ===================
 """
+
+tps1 = time.time()
+
+db = DBSCAN(eps=6.0, min_samples=10).fit(datanp)
+labels = db.labels_
+nbClusters = len(set(labels)) - (1 if -1 in labels else 0)
+
+tps2= time.time()
+
+tps = round (( tps2 - tps1 ) * 1000 , 2 )
+
+# Affichage clustering
+plt.scatter( f0 , f1 , c = labels , s = 8 )
+plt.title( " Resultat du clustering DBSCAN " )
+plt.show()
+print( " nb clusters = " , nbClusters , " runtime = " , round (( tps2 - tps1 ) * 1000 , 2 ) ," ms " )
+
+# Pour xclara,
+# eps = 6.0 maximal car sinon les clusters commencent à se chevaucher 
+# Si on choisi un eps trop haut => plus de distinction entre les clusters
+# min_samples = 10, pour avoir assez de points minimaux dans un clusters 
+# Mais pour ces exemples nous avons gardé un nombre assez bas car il nous semblait que la distance était plus importante pour déterminer les clusters 
+
+# Clusters denses et éloignés entre eux : donc on a plutôt joué sur eps
+
+
+"""
+ ========= Trouver eps et min_samples ======
+"""
+
+# Distances k plus proches voisins
+# Donnees dans X
+k = 5
+neigh = NearestNeighbors(n_neighbors = k)
+neigh.fit(datanp)
+distances , indices = neigh.kneighbors( datanp )
+# retirer le point " origine "
+newDistances = np.asarray([ np.average( distances[i][1:]) for i in range (0, distances.shape[0])])
+trie = np.sort(newDistances)
+plt.title( " Plus proches voisins ( " + str(k) +" ) " )
+plt.plot(trie);
+plt.show()
+
+
+
+"""
+ ====================== HDBSCAN ===================
+"""
+
+tps1 = time.time()
+
+db = hdbscan.HDBSCAN(min_samples=20).fit(datanp)
+labels = db.fit_predict(datanp)
+nbClusters = len(set(labels)) - (1 if -1 in labels else 0)
+
+tps2= time.time()
+
+tps = round (( tps2 - tps1 ) * 1000 , 2 )
+
+# Affichage clustering
+plt.scatter( f0 , f1 , c = labels , s = 8 )
+plt.title( " Resultat du clustering HDBSCAN " )
+plt.show()
+print( " nb clusters = " , nbClusters , " runtime = " , round (( tps2 - tps1 ) * 1000 , 2 ) ," ms " )
+
+# Peu de points minimaux : ne trouve pas les bons clusters
+# Nombre de points entre 10 et 30 : trouve le bon nombre de clusters et inclut les 'anomalies'
+# Nombre de points grand : bon nb de clusters mais augmentation du bruit
+
+
 
 
 
