@@ -12,6 +12,7 @@ import kmedoids
 import scipy . cluster . hierarchy as shc
 
 from sklearn import cluster
+from sklearn.cluster import DBSCAN
 from sklearn.metrics import davies_bouldin_score
 from scipy.io import arff
 from sklearn.metrics.pairwise import euclidean_distances
@@ -25,7 +26,7 @@ from sklearn.metrics import silhouette_score
 """
 
 path ='./artificial/'
-databrut = arff.loadarff(open(path+"twenty.arff",'r'))
+databrut = arff.loadarff(open(path+'xclara.arff','r'))
 data = [[x[0],x[1]] for x in databrut[0]]
 
 f0 =[f[0] for f in data]
@@ -35,8 +36,16 @@ plt.scatter(f0, f1, s=8)
 plt.title("Donnees initiales")
 plt.show()
 
+
+
 """
- =================== Clustering K-M =================
+ ====================================================
+ ===== Clustering basés sur des centres de masse ====
+ ====================================================
+"""
+
+"""
+ ================ Clustering K-Means ================
 """
 
 datanp = data
@@ -52,18 +61,20 @@ for i in range(2, 30) :
     met = davies_bouldin_score(datanp, model.labels_)
     vectMet.append(met) 
 
-plt.scatter(list(range(2,30)), vectMet)
-plt.title("Metrics de Davies-Bouldin" )
-plt.show()
-
 # +2 car les indices commencent à 0 et nos inices commencent à 2
 k=np.argmin(vectMet)+2
 model = cluster.KMeans(n_clusters=k, init ='k-means++')
 model.fit(datanp)
 
 tps2 = time.time()
+
 labels = model.labels_
 iteration = model.n_iter_
+
+# Affichage des métriques de Davies-Bouldin
+plt.scatter(list(range(2,30)), vectMet)
+plt.title("Metrics de Davies-Bouldin" )
+plt.show()
 
 plt.scatter(f0,f1, c=labels, s=8)
 plt.title(" Donnees apres clustering Kmeans " )
@@ -72,7 +83,7 @@ print( "nb clusters = " ,k , " , nb iter =" , iteration, " , . . . . . . runtime
 
 
 """
- =================== Kmedoids =================
+ =============== Clustering K-medoids ==============
 """
 
 tps1 = time.time()
@@ -145,7 +156,9 @@ print("rand_score of kmedoids with euclidean and manhattan distances : ", rand_s
 
 
 """
- =================== Cluestering agglomératif ================
+ ====================================================
+ ============ Cluestering agglomératif ==============
+ ====================================================
 """
 
 # Donnees dans datanp
@@ -166,12 +179,12 @@ leaves = model.n_leaves_
 
 # Affichage clustering
 plt.scatter( f0 , f1 , c = labels , s = 8 )
-plt.title( " Resultat du clustering " )
+plt.title( " Resultat du clustering (linkage single, seuil distance 10) " )
 plt.show()
 print( " nb clusters = " ,k , " , nb feuilles = " , leaves , " runtime = " , round (( tps2 - tps1 ) * 1000 , 2 ) ," ms " )
 
 # set the number of clusters
-k = 4
+k = 3
 tps1 = time.time()
 model = cluster.AgglomerativeClustering( linkage = 'single' , n_clusters = k )
 model = model.fit( datanp )
@@ -182,7 +195,7 @@ leaves = model.n_leaves_
 
 # Affichage clustering
 plt.scatter( f0 , f1 , c = labels , s = 8 )
-plt.title( " Resultat du clustering " )
+plt.title( ' Resultat du clustering (linkage single avec ' +  str(k) + ' clusters) ' )
 plt.show()
 print( " nb clusters = " ,k , " , nb feuilles = " , leaves , " runtime = " , round (( tps2 - tps1 ) * 1000 , 2 ) ," ms " )
 
@@ -226,35 +239,47 @@ print( " nb clusters = " ,kres , " , nb feuilles = " , leaves , " runtime = " , 
  ================ Optimization type de combination de clusters =============
 """
 
+# Récupération du jeu de données xclara.arff (3 clusters)
+path ='./artificial/'
+databrut = arff.loadarff(open(path+'xclara.arff','r'))
+dataAgg = [[x[0],x[1]] for x in databrut[0]]
+
+f0Agg =[f[0] for f in dataAgg]
+f1Agg =[f[1] for f in dataAgg]
+
+plt.scatter(f0Agg, f1Agg, s=8)
+plt.title("Donnees initiales xclara.arff")
+plt.show()
+
 # On prend un nombre fixe k de clusters
 
 # set the number of clusters
-k = 20
+k = 3
 
 tps1 = time.time()
 model_single = cluster.AgglomerativeClustering( linkage = 'single' , n_clusters = k )
-model_single = model_single.fit( datanp )
+model_single = model_single.fit( dataAgg )
 tps2_single = time.time()
 
 tps_single = round (( tps2_single - tps1 ) * 1000 , 2 )
 
 tps1 = time.time()
 model_average = cluster.AgglomerativeClustering( linkage = 'average' , n_clusters = k )
-model_average = model_average.fit( datanp )
+model_average = model_average.fit( dataAgg )
 tps_average = time.time()
 
 tps_average = round (( tps_average - tps1 ) * 1000 , 2 )
 
 tps1 = time.time()
 model_ward = cluster.AgglomerativeClustering( linkage = 'ward' , n_clusters = k )
-model_ward = model_ward.fit( datanp )
+model_ward = model_ward.fit( dataAgg )
 tps_ward = time.time()
 
 tps_ward = round (( tps_ward - tps1 ) * 1000 , 2 )
 
 tps1 = time.time()
 model_complete = cluster.AgglomerativeClustering( linkage = 'complete' , n_clusters = k )
-model_complete = model_complete.fit( datanp )
+model_complete = model_complete.fit( dataAgg )
 tps_complete = time.time()
 
 
@@ -271,22 +296,22 @@ kres_ward = model_ward.n_clusters_
 kres_complete = model_complete.n_clusters_
 
 # Affichage clustering single
-plt.scatter( f0 , f1 , c = labels_single , s = 8 )
+plt.scatter( f0Agg , f1Agg , c = labels_single , s = 8 )
 plt.title( " Resultat du clustering avec linkage single " )
 plt.show()
 
 # Affichage clustering average
-plt.scatter( f0 , f1 , c = labels_average , s = 8 )
+plt.scatter( f0Agg , f1Agg , c = labels_average , s = 8 )
 plt.title( " Resultat du clustering avec linkage average " )
 plt.show()
 
 # Affichage clustering ward
-plt.scatter( f0 , f1 , c = labels_ward , s = 8 )
+plt.scatter( f0Agg , f1Agg , c = labels_ward , s = 8 )
 plt.title( " Resultat du clustering avec linkage ward " )
 plt.show()
 
 # Affichage clustering complete
-plt.scatter( f0 , f1 , c = labels_complete , s = 8 )
+plt.scatter( f0Agg , f1Agg , c = labels_complete , s = 8 )
 plt.title( " Resultat du clustering avec linkage complete " )
 plt.show()
 
@@ -296,6 +321,16 @@ print(" Temps de calcul (ward) : ", tps_ward," ms")
 print(" Temps de calcul (complete) : ", tps_complete," ms")
 
 
+
+"""
+ ====================================================
+ ================ DBSCAN et HDBSCAN =================
+ ====================================================
+"""
+
+"""
+ ====================== DBSCAN ===================
+"""
 
 
 
